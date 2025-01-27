@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Porcentajes</title>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #fdfbfb, #ebedee);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+            padding: 35px;
+            width: 700px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333333;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #555555;
+            font-size: 16px;
+        }
+
+        input[type="number"], input[type="text"] {
+            padding: 10px;
+            margin-right: 10px;
+            border: 1px solid #cccccc;
+            border-radius: 5px;
+            font-size: 16px;
+            width: 30%;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 15px;
+            border-bottom: 1px solid #cccccc;
+            font-size: 16px;
+        }
+
+        th {
+            background-color: #f1f1f1;
+            font-weight: bold;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .discount-form {
+            margin-top: 15px;
+            text-align: left;
+        }
+
+        .discount-form input {
+            margin-bottom: 10px;
+        }
+
+        .discount-form button {
+            padding: 10px 15px;
+            background: #5cb85c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .discount-form button:hover {
+            background: #4cae4c;
+        }
+
+        .export-btn {
+            margin-top: 30px;
+            padding: 12px 25px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            width: 100%;
+        }
+
+        .export-btn:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Calculadora</h1>
+        <div class="form-group">
+            <label for="amount">Monto ($):</label>
+            <input type="number" id="amount" placeholder="Ingresa un monto" oninput="calculate()">
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Persona</th>
+                    <th>Porcentaje</th>
+                    <th>Monto</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Federico Saravia
+                        <div class="discount-form">
+                            <input type="text" id="federico-descripcion" placeholder="Descripción del descuento">
+                            <input type="number" id="federico-descuento" placeholder="Descuento">
+                            <button onclick="applyDiscount('federico', 0.35)">Aplicar</button>
+                        </div>
+                        <ul id="federico-list"></ul>
+                    </td>
+                    <td>35%</td>
+                    <td id="federico">$0.00</td>
+                </tr>
+                <tr>
+                    <td>Débora Fazzini
+                        <div class="discount-form">
+                            <input type="text" id="debora-descripcion" placeholder="Descripción del descuento">
+                            <input type="number" id="debora-descuento" placeholder="Descuento">
+                            <button onclick="applyDiscount('debora', 0.35)">Aplicar</button>
+                        </div>
+                        <ul id="debora-list"></ul>
+                    </td>
+                    <td>35%</td>
+                    <td id="debora">$0.00</td>
+                </tr>
+                <tr>
+                    <td>Gastos</td>
+                    <td>30%</td>
+                    <td id="gastos">$0.00</td>
+                </tr>
+            </tbody>
+        </table>
+        <button class="export-btn" onclick="exportPDF()">Exportar a PDF</button>
+    </div>
+
+    <script>
+        const discounts = {
+            federico: 0,
+            debora: 0
+        };
+
+        function calculate() {
+            const amount = parseFloat(document.getElementById('amount').value) || 0;
+
+            const federicoAmount = (amount * 0.35 - discounts.federico).toFixed(2);
+            const deboraAmount = (amount * 0.35 - discounts.debora).toFixed(2);
+            const gastosAmount = (amount * 0.30).toFixed(2);
+
+            document.getElementById('federico').textContent = `$${federicoAmount}`;
+            document.getElementById('debora').textContent = `$${deboraAmount}`;
+            document.getElementById('gastos').textContent = `$${gastosAmount}`;
+        }
+
+        function applyDiscount(person, percentage) {
+            const discountInput = document.getElementById(`${person}-descuento`);
+            const descriptionInput = document.getElementById(`${person}-descripcion`);
+            const discount = parseFloat(discountInput.value) || 0;
+            const description = descriptionInput.value || 'Sin descripción';
+
+            discounts[person] += discount;
+
+            const list = document.getElementById(`${person}-list`);
+            const listItem = document.createElement('li');
+            listItem.textContent = `${description}: $${discount.toFixed(2)}`;
+            list.appendChild(listItem);
+
+            calculate();
+
+            discountInput.value = '';
+            descriptionInput.value = '';
+        }
+
+        function exportPDF() {
+            const element = document.querySelector('.container');
+            html2pdf().from(element).save('calculadora.pdf');
+        }
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
+</body>
+</html>
